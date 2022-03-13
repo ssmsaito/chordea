@@ -5,25 +5,31 @@ from modules import (
         get_type,
         get_note_by_fret_number,
         step_by_half_tone,
-        get_chord_factors,
         has_valid_root,
         get_min_fret,
         print_diagram
     )
+from models import Chord
 
 def main():
-    factors = get_chord_factors(args.chord_name)
-    root_note = factors[0]
+    chord = Chord(args.chord_name)
+    print(f'''
+=====================================
+Chord Name: {chord.name}
+Triad: {chord.triad}
+All Factors: {chord.factors}
+=====================================
+''')
     chord_frets_all = set()
     for fret_from in range(args.fret_from, args.fret_to-args.fret_range+1):
         chord_frets = []
         for string_index, tuned_note in enumerate(args.tuning):
             note = None
             for fret_offset in range(args.fret_range+1) if fret_from==0 else range(args.fret_range):
-                if step_by_half_tone(tuned_note, fret_from + fret_offset, type = get_type(root_note)) in factors:
+                if step_by_half_tone(tuned_note, fret_from + fret_offset, type = get_type(chord.root)) in chord.factors:
                     note = fret_from + fret_offset
                     break
-            if not args.disable_open_string and note is None and get_note_by_fret_number(string_index, 0, args.tuning, type = get_type(root_note)) in factors:
+            if not args.disable_open_string and note is None and get_note_by_fret_number(string_index, 0, args.tuning, type = get_type(chord.root)) in chord.factors:
                 note = 0
             chord_frets.append(note)
         chord_frets_all.add(tuple(chord_frets))
@@ -42,8 +48,8 @@ def main():
                 _chord_frets[string_index] = None
 
     for chord_frets in sorted([tuple(chord_frets) for chord_frets in chord_frets_all], key = lambda chord_frets: get_min_fret(chord_frets)):
-        if args.ignore_root or has_valid_root(args.chord_name, chord_frets, args.tuning):
-            print_diagram(args.chord_name, chord_frets, args.fret_range, args.tuning)
+        if args.ignore_root or has_valid_root(chord, chord_frets, args.tuning):
+            print_diagram(chord, chord_frets, args.fret_range, args.tuning)
 
 if __name__=='__main__':
     main()

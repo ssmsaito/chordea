@@ -22,21 +22,15 @@ def step_by_half_tone(note: str, steps: int = 1, return_note: bool = True, type:
     index = (get_note_index(note) + steps)%12
     return get_note_by_index(index, type) if return_note else index
 
-def get_chord_factors(chord_name):
-    root_note = chord_name
-    triad = [root_note, step_by_half_tone(root_note, +4), step_by_half_tone(root_note, +7)]
-    return triad
-
 def get_type(note):
     return 'flat' if is_flat_note(note) else 'sharp'
 
-def has_valid_root(chord_name: str, chord_frets: list[int], tuning: list[str]):
-    root_note = get_chord_factors(chord_name)[0]
+def has_valid_root(chord, chord_frets: list[int], tuning: list[str]):
     for string_index, fret in enumerate(chord_frets):
         if fret is None: continue
         else:
             # FIXME
-            return get_note_by_fret_number(string_index, fret, tuning, type = get_type(root_note)) == chord_name
+            return get_note_by_fret_number(string_index, fret, tuning, type = get_type(chord.root)) == chord.root
     return False
 
 def get_min_fret(chord_frets):
@@ -45,8 +39,7 @@ def get_min_fret(chord_frets):
 def get_max_fret(chord_frets):
     return max([fret for fret in chord_frets if fret is not None])
 
-def print_diagram(chord_name: str, chord_frets: list[int], fret_range: int, tuning: list[str]):
-    root_note = get_chord_factors(chord_name)[0]
+def print_diagram(chord, chord_frets: list[int], fret_range: int, tuning: list[str]):
     min_fret = get_min_fret(chord_frets)
     if min_fret == 0:
         min_fret = get_min_fret([fret if fret is not None and fret>0 else None for fret in chord_frets])
@@ -55,7 +48,7 @@ def print_diagram(chord_name: str, chord_frets: list[int], fret_range: int, tuni
         if fret is None:
             line = '   x'
         else:
-            line = get_note_by_fret_number(string_index, fret, tuning, type = get_type(root_note)).ljust(3)
+            line = get_note_by_fret_number(string_index, fret, tuning, type = get_type(chord.root)).ljust(3)
             if fret == 0:
                 line += 'o'
             else:
